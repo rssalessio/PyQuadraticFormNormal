@@ -40,7 +40,7 @@ static PyArrayObject* convert_int_array(PyObject *arg) {
     return lb;
 }
 
-/*  wrapped cosine function */
+/*  check also https://github.com/cran/CompQuadForm/blob/master/src/qfc.cpp */
 static PyObject* davies_method(PyObject* self, PyObject* args)
 {
     PyObject *arg1 = NULL, *arg2 = NULL, *arg3 = NULL;
