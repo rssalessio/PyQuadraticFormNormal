@@ -9,32 +9,63 @@
 typedef npy_intp integer;
 typedef npy_double real;
 
-/*  wrapped cosine function */
-static PyObject* davies_method(PyObject* self, PyObject* args)
-{
-    PyObject *arg1=NULL;
-    PyArrayObject *lb = NULL, *nc = NULL;
-
-
-    if (!PyArg_ParseTuple(args, "O", &arg1, &PyArray_Type))
-        return NULL;
-
-    lb = (PyArrayObject*) PyArray_FROM_OTF(arg1, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
-    if (lb == NULL)
-        return NULL;
-
-    integer nd = PyArray_NDIM(lb);
-
-    if (nd != 1) {
-        PyErr_SetString(PyExc_RuntimeError,
-                        "The first argument needs to be a 1-dimensional vector");
+static PyArrayObject* convert_double_array(PyObject *arg) {
+    PyArrayObject* lb = (PyArrayObject*) PyArray_FROM_OTF(arg, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+    if (lb == NULL) {
+        PyErr_SetString(PyExc_RuntimeError, "Error while converting an array to an array of real numbers.");
         return NULL;
     }
 
-    integer* dims = PyArray_SHAPE(lb);
+    integer nd = PyArray_NDIM(lb);
+    if (nd != 1) {
+        PyErr_SetString(PyExc_RuntimeError, "The first argument needs to be a 1-dimensional vector");
+        return NULL;
+    }
+    return lb;
+}
+
+
+static PyArrayObject* convert_int_array(PyObject *arg) {
+    PyArrayObject* lb = (PyArrayObject*) PyArray_FROM_OTF(arg, NPY_INTP, NPY_ARRAY_IN_ARRAY);
+    if (lb == NULL) {
+        PyErr_SetString(PyExc_RuntimeError, "Error while converting an array to an array of real numbers.");
+        return NULL;
+    }
+
+    integer nd = PyArray_NDIM(lb);
+    if (nd != 1) {
+        PyErr_SetString(PyExc_RuntimeError, "The first argument needs to be a 1-dimensional vector");
+        return NULL;
+    }
+    return lb;
+}
+
+/*  wrapped cosine function */
+static PyObject* davies_method(PyObject* self, PyObject* args)
+{
+    PyObject *arg1 = NULL, *arg2 = NULL, *arg3 = NULL;
+    PyArrayObject *lb = NULL, *nc = NULL, *df = NULL;
+
+    if (!PyArg_ParseTuple(args, "OOO", &arg1, &arg2, &arg3, &PyArray_Type))
+        return NULL;
+
+    lb = convert_double_array(arg1);
+    nc = convert_double_array(arg2);
+    df = convert_int_array(arg3);
+    if (lb == NULL || nc == NULL || df == NULL)
+        return NULL;
+
+    npy_intp* lb_shape = PyArray_SHAPE(lb);
+    npy_intp* nc_shape = PyArray_SHAPE(nc);
+    npy_intp* df_shape = PyArray_SHAPE(df);
+
+    if ((nc_shape[0] != lb_shape[0]) || (nc_shape[0] != df_shape[0])) {
+        PyErr_SetString(PyExc_RuntimeError, "lb and nc and df do not have the same shape.");
+        return NULL;
+    }
 
     /*  construct the output from cos, from c double to python float */
-    return Py_BuildValue("f", cos(nd));
+    return Py_BuildValue("f", cos(lb_shape[0]));
 }
 
 /*  define functions in module */
