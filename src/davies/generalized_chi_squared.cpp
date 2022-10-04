@@ -94,6 +94,7 @@ static PyObject* davies_method(PyObject* self, PyObject* args)
     results = PyList_New(x_shape[0]);
     trace = PyList_New(7);
 
+    qfc((double*) coeff, (double*) nc, (int *) df, (int *) &r, (double *) &sigma,  (double *) x, (int *) &limit, (double *) &accuracy, (double *) trace, (int *) &ifault, (double *) &results);
 
     /*  construct the output from cos, from c double to python float */
     return Py_BuildValue("OOif", results, trace, ifault, cos(1+accuracy));

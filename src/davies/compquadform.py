@@ -27,6 +27,9 @@ def davies(
     if r != len(_coeff):
         raise Exception('df and coeff should have the same length')
 
+    results = np.zeros(len(_x), dtype=np.float64)
+    trace = np.zeros(7, dtype=np.float64)
+
     return davies_method(_coeff, _nc, _df, _x, sigma, lim, acc)
 
 # davies <- function(q, lambda, h = rep(1, length(lambda)), delta = rep(0, length(lambda)), sigma = 0, lim = 10000, acc = 0.0001) {
