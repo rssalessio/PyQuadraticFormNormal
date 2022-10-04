@@ -49,15 +49,14 @@ static PyObject* davies_method(PyObject* self, PyObject* args)
     PyArrayObject *coeff = NULL, *nc = NULL, *df = NULL, *x = NULL;
 
     /* Output arguments */
-    PyObject *results = NULL, *trace = NULL;
-    npy_intp ifault = 0;
+    PyObject *results = NULL, *trace = NULL, *ifault = NULL;
 
-    double sigma = 0, accuracy = 1e-4;
+    double sigma = 0, acc = 1e-4;
     npy_int limit = 10000;
 
     /*double *sigma, double *c1, int *lim1, double *acc,*/
 
-    if (!PyArg_ParseTuple(args, "OOOOOOO", &arg1, &arg2, &arg3, &arg4, &arg5, &arg6, &arg7, &PyArray_Type))
+    if (!PyArg_ParseTuple(args, "OOOOOOOOOO", &arg1, &arg2, &arg3, &arg4, &arg5, &arg6, &arg7, &results, &trace, &ifault, &PyArray_Type))
         return NULL;
 
     coeff = convert_double_array(arg1);
@@ -66,10 +65,10 @@ static PyObject* davies_method(PyObject* self, PyObject* args)
     x = convert_double_array(arg4);
     sigma = ((double*) arg5)[0];
     limit = ((npy_int*) arg6)[0];
-    accuracy = ((double*) arg7)[0];
+    acc = ((double*) arg7)[0];
     
 
-    if (coeff == NULL || nc == NULL || df == NULL || x == NULL || sigma == NULL || limit == NULL || accuracy == NULL) {
+    if (coeff == NULL || nc == NULL || df == NULL || x == NULL || sigma == NULL || limit == NULL || acc == NULL) {
         PyErr_SetString(PyExc_RuntimeError, "Some of the parameters are null");
         return NULL;
     }
@@ -91,13 +90,10 @@ static PyObject* davies_method(PyObject* self, PyObject* args)
 
     npy_intp r = coeff_shape[0];
 
-    results = PyList_New(x_shape[0]);
-    trace = PyList_New(7);
-
-    qfc((double*) coeff, (double*) nc, (int *) df, (int *) &r, (double *) &sigma,  (double *) x, (int *) &limit, (double *) &accuracy, (double *) trace, (int *) &ifault, (double *) &results);
+    qfc((double*) coeff, (double*) nc, (int *) df, (int *) &r, (double *) &sigma,  (double *) x, (int *) &limit, (double *) &acc, (double *) trace, (int *) &ifault, (double *) &results);
 
     /*  construct the output from cos, from c double to python float */
-    return Py_BuildValue("OOif", results, trace, ifault, cos(1+accuracy));
+    return Py_BuildValue("if", ifault, &results[0]);
 }
 
 /*  define functions in module */
