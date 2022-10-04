@@ -2,3 +2,5 @@ tests/*
 build/*
 *.so
 *.o
+.vscode/*
+__pycache__/*

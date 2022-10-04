@@ -5,6 +5,7 @@
 #include <numpy/arrayobject.h>
 #include <stdio.h>
 #include <vector>
+#include "qfc.cpp"
 
 typedef npy_intp integer;
 typedef npy_double real;
@@ -43,29 +44,59 @@ static PyArrayObject* convert_int_array(PyObject *arg) {
 /*  check also https://github.com/cran/CompQuadForm/blob/master/src/qfc.cpp */
 static PyObject* davies_method(PyObject* self, PyObject* args)
 {
-    PyObject *arg1 = NULL, *arg2 = NULL, *arg3 = NULL;
-    PyArrayObject *lb = NULL, *nc = NULL, *df = NULL;
+    /* Input arguments */
+    PyObject *arg1 = NULL, *arg2 = NULL, *arg3 = NULL, *arg4 = NULL, *arg5 = NULL, *arg6 = NULL, *arg7 = NULL;
+    PyArrayObject *coeff = NULL, *nc = NULL, *df = NULL, *x = NULL;
 
-    if (!PyArg_ParseTuple(args, "OOO", &arg1, &arg2, &arg3, &PyArray_Type))
+    /* Output arguments */
+    PyObject *results = NULL, *trace = NULL;
+    npy_intp ifault = 0;
+
+    double sigma = 0, accuracy = 1e-4;
+    npy_int limit = 10000;
+
+    /*double *sigma, double *c1, int *lim1, double *acc,*/
+
+    if (!PyArg_ParseTuple(args, "OOOOOOO", &arg1, &arg2, &arg3, &arg4, &arg5, &arg6, &arg7, &PyArray_Type))
         return NULL;
 
-    lb = convert_double_array(arg1);
+    coeff = convert_double_array(arg1);
     nc = convert_double_array(arg2);
     df = convert_int_array(arg3);
-    if (lb == NULL || nc == NULL || df == NULL)
-        return NULL;
+    x = convert_double_array(arg4);
+    sigma = ((double*) arg5)[0];
+    limit = ((npy_int*) arg6)[0];
+    accuracy = ((double*) arg7)[0];
+    
 
-    npy_intp* lb_shape = PyArray_SHAPE(lb);
+    if (coeff == NULL || nc == NULL || df == NULL || x == NULL || sigma == NULL || limit == NULL || accuracy == NULL) {
+        PyErr_SetString(PyExc_RuntimeError, "Some of the parameters are null");
+        return NULL;
+    }
+
+    npy_intp* coeff_shape = PyArray_SHAPE(coeff);
     npy_intp* nc_shape = PyArray_SHAPE(nc);
     npy_intp* df_shape = PyArray_SHAPE(df);
+    npy_intp* x_shape = PyArray_SHAPE(x);
 
-    if ((nc_shape[0] != lb_shape[0]) || (nc_shape[0] != df_shape[0])) {
+    if ((nc_shape[0] != coeff_shape[0]) || (nc_shape[0] != df_shape[0])) {
         PyErr_SetString(PyExc_RuntimeError, "lb and nc and df do not have the same shape.");
         return NULL;
     }
 
+    if (x_shape[0] <= 0) {
+        PyErr_SetString(PyExc_RuntimeError, "x cannot be empty");
+        return NULL;
+    }
+
+    npy_intp r = coeff_shape[0];
+
+    results = PyList_New(x_shape[0]);
+    trace = PyList_New(7);
+
+
     /*  construct the output from cos, from c double to python float */
-    return Py_BuildValue("f", cos(lb_shape[0]));
+    return Py_BuildValue("OOif", results, trace, ifault, cos(1+accuracy));
 }
 
 /*  define functions in module */
