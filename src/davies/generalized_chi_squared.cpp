@@ -93,7 +93,7 @@ static PyObject* davies_method(PyObject* self, PyObject* args)
     qfc((double*) coeff, (double*) nc, (int *) df, (int *) &r, (double *) &sigma,  (double *) x, (int *) &limit, (double *) &acc, (double *) trace, (int *) &ifault, (double *) &results);
 
     /*  construct the output from cos, from c double to python float */
-    return Py_BuildValue("if", ifault, &results[0]);
+    return Py_BuildValue("i", ifault);
 }
 
 /*  define functions in module */

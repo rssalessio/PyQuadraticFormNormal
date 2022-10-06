@@ -32,7 +32,9 @@ def davies(
     ifault = np.zeros(1, dtype=np.int64)
     
 
-    return (davies_method(_coeff, _nc, _df, _x, sigma, lim, acc, results, trace, ifault), results)
+    res = davies_method(_coeff, _nc, _df, _x, sigma, lim, acc, results, trace, ifault)
+    import pdb
+    pdb.set_trace()
 
 # davies <- function(q, lambda, h = rep(1, length(lambda)), delta = rep(0, length(lambda)), sigma = 0, lim = 10000, acc = 0.0001) {
 
