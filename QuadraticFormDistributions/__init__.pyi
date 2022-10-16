@@ -9,7 +9,7 @@ __all__ = [
 ]
 
 
-def davies_method(x: List[np.float64], coeff: List[np.float64], nc: List[np.float64], df: List[np.uint64], sigma: float = 1, limit: int = 10000, accuracy: float = 1e-05) -> Tuple[List[np.float64], List[np.float64], int]:
+def davies_method(x: List[np.float64], coeff: List[np.float64], nc: List[np.float64], df: List[np.uint64], sigma: float = 1, limit: int = 10000, accuracy: float = 1e-05) -> List[np.float64]:
     """
     Distribution function of quadratic forms in normal variables using Davies’s method.
 
@@ -20,7 +20,5 @@ def davies_method(x: List[np.float64], coeff: List[np.float64], nc: List[np.floa
     :param sigma: Std of the gaussian 
     :param limit: Maximum number of iterations
     :param accuracy: Desired accuracy
-    :result results: Probability of the evaluted points
-    :result trace: Diagnostics
-    :result fault: If 0, the algorithm has terminated successfully.        
+    :result results: Probability of the evaluted points    
     """

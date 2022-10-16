@@ -44,7 +44,7 @@ void check_parameters(
     return;
 }
 
-std::tuple<py::array_t<double>, py::array_t<double>, int> davies_method(
+py::array_t<double> davies_method(
     py::array_t<double> x,
     py::array_t<double> coeff,
     py::array_t<double> nc,
@@ -58,25 +58,31 @@ std::tuple<py::array_t<double>, py::array_t<double>, int> davies_method(
     /* No pointer is passed, so NumPy will allocate the buffer */
     py::array_t<double> result = py::array_t<double>(x.shape()[0]);
     py::array_t<double> trace = py::array_t<double>(7);
-    int ifault = 0;
-    int r = coeff.shape()[0] + 1;
+    int r = coeff.shape()[0];
 
-    qfc(
-        static_cast<double *>(coeff.request().ptr),
-        static_cast<double *>(nc.request().ptr),
-        static_cast<int *>(df.request().ptr),
-        (int *) &r,
-        &sigma,
-        static_cast<double *>(x.request().ptr),
-        (int* ) &limit,
-        &accuracy,
-        static_cast<double *>(trace.request().ptr),
-        &ifault, 
-        static_cast<double *>(result.request().ptr));
+    double *result_ptr = static_cast<double *>(result.request().ptr);
+    double *x_ptr = static_cast<double *>(x.request().ptr);
+    double *coeff_ptr = static_cast<double *>(coeff.request().ptr);
+    double *nc_ptr = static_cast<double *>(nc.request().ptr);
+    int *df_ptr = static_cast<int *>(df.request().ptr);
+    double *trace_ptr = static_cast<double *>(trace.request().ptr);
 
-    check_error(ifault);
-
-    return std::tuple(result, trace, ifault);
+    for (ssize_t i=0; i < x.shape()[0]; i++) {
+        int ifault = 0;
+        result_ptr[i] = qf(
+            coeff_ptr,
+            nc_ptr,
+            df_ptr,
+            r,
+            sigma,
+            x_ptr[i],
+            limit,
+            accuracy,
+            trace_ptr,
+            &ifault);
+        check_error(ifault);
+    }
+    return result;
 }
 
 PYBIND11_MODULE(QuadraticFormDistributions, m) {
@@ -105,9 +111,7 @@ PYBIND11_MODULE(QuadraticFormDistributions, m) {
             :param accuracy: Desired accuracy
 
             Returns
-            :result results: Probability of the evaluted points
-            :result trace: Diagnostics
-            :result fault: If 0, the algorithm has terminated successfully.        
+            :result results: Probability of the evaluted points 
         )pbdoc",
         py::arg("x"),
         py::arg("coeff"),
