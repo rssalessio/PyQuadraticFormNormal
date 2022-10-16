@@ -3,15 +3,34 @@
 #include "qfc.cpp"
 namespace py = pybind11;
 
-std::tuple<py::array_t<double>, py::array_t<double>, int> davies_method(
-        py::array_t<double> x,
-        py::array_t<double> coeff,
-        py::array_t<double> nc,
-        py::array_t<unsigned long int> df,
-        double sigma,
-        unsigned long int limit,
-        double accuracy) {
 
+void check_error(int error_flag) {
+    switch(error_flag) {
+        case 1:
+            throw std::range_error("Required accuracy not achieved");
+        case 2:
+            throw std::overflow_error("Round-off error possibly significant");
+        case 3:
+            throw std::invalid_argument("Invalid parameters");
+        case 4:
+            throw std::out_of_range("Unable to locate integration parameter");
+        case 5:
+            throw std::overflow_error("Out of memory");
+        default:
+            break;
+    }
+    return;
+}
+
+void check_parameters(
+    py::array_t<double> x,
+    py::array_t<double> coeff,
+    py::array_t<double> nc,
+    py::array_t<unsigned long int> df,
+    double sigma,
+    unsigned long int limit,
+    double accuracy
+) {
     if (coeff.size() != nc.size() || coeff.size() != df.size())
         throw std::length_error("coeff, nc and df need to have the same shape");
     else if (coeff.ndim() != 1 || x.ndim() != 1) 
@@ -20,11 +39,25 @@ std::tuple<py::array_t<double>, py::array_t<double>, int> davies_method(
         throw std::length_error("x cannot be empty");
     else if (accuracy <= 0)
         throw std::domain_error("Accuracy needs to be strictly positive");
+    return;
+}
+
+std::tuple<py::array_t<double>, py::array_t<double>, int> davies_method(
+    py::array_t<double> x,
+    py::array_t<double> coeff,
+    py::array_t<double> nc,
+    py::array_t<unsigned long int> df,
+    double sigma,
+    unsigned long int limit,
+    double accuracy) {
+
+    check_parameters(x, coeff, nc, df, sigma, limit, accuracy);
 
     /* No pointer is passed, so NumPy will allocate the buffer */
     py::array_t<double> result = py::array_t<double>(x.shape()[0]);
     py::array_t<double> trace = py::array_t<double>(7);
     int ifault = 0;
+    int r = df.size();
 
     qfc(
         static_cast<double *>(coeff.request().ptr),
@@ -39,6 +72,7 @@ std::tuple<py::array_t<double>, py::array_t<double>, int> davies_method(
         &ifault, 
         static_cast<double *>(result.request().ptr));
 
+    check_error(ifault);
 
     return std::tuple(result, trace, ifault);
 }
@@ -56,6 +90,6 @@ PYBIND11_MODULE(generalized_chi_squared, m) {
         py::arg("df"),
         py::arg("sigma") = 1,
         py::arg("limit") = 10000,
-        py::arg("accuracy") = 0.0001
+        py::arg("accuracy") = 0.00001
         );
 }
