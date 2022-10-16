@@ -77,8 +77,8 @@ std::tuple<py::array_t<double>, py::array_t<double>, int> davies_method(
     return std::tuple(result, trace, ifault);
 }
 
-PYBIND11_MODULE(generalized_chi_squared, m) {
-    m.doc() = "pybind11 generalized_chi_squared plugin"; // optional module docstring
+PYBIND11_MODULE(CompQuadForm, m) {
+    m.doc() = "pybind11 CompQuadForm plugin"; // optional module docstring
 
     m.def(
         "davies_method",

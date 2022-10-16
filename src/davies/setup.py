@@ -8,7 +8,7 @@ from setuptools import setup
 __version__ = "0.0.1"
 
 ext_modules = [
-    Pybind11Extension("generalized_chi_squared",
+    Pybind11Extension("CompQuadForm",
         ["generalized_chi_squared.cpp"],
         # Example: passing in the version to the compiled code
         define_macros = [('VERSION_INFO', __version__)],
@@ -16,7 +16,7 @@ ext_modules = [
 ]
 
 setup(
-    name="generalized_chi_squared",
+    name="CompQuadForm",
     version=__version__,
     author="Alessio Russo",
     author_email="alessior@kth.se",
