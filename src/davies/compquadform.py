@@ -7,7 +7,7 @@ def davies(
         coeff: List[float],
         nc: List[float],
         df: List[int],
-        sigma: float = 0,
+        sigma: float = 1,
         lim: int = 10000,
         acc: float = 1e-4) -> float:
     _x = np.asarray(x, dtype=np.float64)
@@ -32,9 +32,7 @@ def davies(
     ifault = np.zeros(1, dtype=np.int64)
     
 
-    res = davies_method(_coeff, _nc, _df, _x, sigma, lim, acc, results, trace, ifault)
-    import pdb
-    pdb.set_trace()
+    return davies_method(_coeff, _nc, _df, _x, sigma, lim, acc, results, trace, ifault)
 
 # davies <- function(q, lambda, h = rep(1, length(lambda)), delta = rep(0, length(lambda)), sigma = 0, lim = 10000, acc = 0.0001) {
 
