@@ -280,7 +280,8 @@ output:
    trace[3]         integration interval in final integration
    trace[4]         truncation point in initial integration
    trace[5]         s.d. of initial convergence factor
-   trace[6]         cycles to locate integration parameters     */
+   trace[6]         cycles to locate integration parameters
+   */
 
 {
       int j, nj, nt, ntm;  double acc1, almx, xlim, xnt, xntm;
