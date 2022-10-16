@@ -87,9 +87,12 @@ static PyObject* davies_method(PyObject* self, PyObject* args)
     }
 
     
-    double _trace[6] ={1, 0, 0, 0, 0, 0};
+    double _trace[6] ={0, 0, 0, 0, 0, 0};
     int _ifault = 0;
     double* _res = (double*) malloc(x_shape[0] * (sizeof(double)));
+    for (int i = 0; i < x_shape[0];i++) {
+        _res[i] = 0;
+    }
 
     qfc((double*) coeff, (double*) nc, (int *) df, (int *) &r, &sigma,  (double *) x, &limit, &accuracy, _trace, &_ifault, _res);
 
