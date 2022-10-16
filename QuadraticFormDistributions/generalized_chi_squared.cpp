@@ -1,8 +1,10 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 #include "qfc.cpp"
-namespace py = pybind11;
+#define STRINGIFY(x) #x
+#define MACRO_STRINGIFY(x) STRINGIFY(x)
 
+namespace py = pybind11;
 
 void check_error(int error_flag) {
     switch(error_flag) {
@@ -77,13 +79,36 @@ std::tuple<py::array_t<double>, py::array_t<double>, int> davies_method(
     return std::tuple(result, trace, ifault);
 }
 
-PYBIND11_MODULE(CompQuadForm, m) {
-    m.doc() = "pybind11 CompQuadForm plugin"; // optional module docstring
+PYBIND11_MODULE(QuadraticFormDistributions, m) {
+    m.doc() = R"pbdoc(
+        QuadraticFormDistributions
+        -----------------------
+        .. currentmodule:: QuadraticFormDistributions
+        .. autosummary::
+           :toctree: _generate
+           davies_method
+    )pbdoc";
 
     m.def(
         "davies_method",
         &davies_method,
-        "Distribution function of quadratic forms in normal variables using Davies’s method.",
+        R"pbdoc(
+            Distribution function of quadratic forms in normal variables using Davies’s method.
+            
+            Parameters
+            :param x: List of points to evaluate
+            :param coeff: Coefficients of the chi^2 distributions.
+            :param nc: Non-centrality parameters. Needs to be the same size as coeff.
+            :param df: Degrees of freedom. Needs to be the same size as coeff.
+            :param sigma: Std of the gaussian 
+            :param limit: Maximum number of iterations
+            :param accuracy: Desired accuracy
+
+            Returns
+            :result results: Probability of the evaluted points
+            :result trace: Diagnostics
+            :result fault: If 0, the algorithm has terminated successfully.        
+        )pbdoc",
         py::arg("x"),
         py::arg("coeff"),
         py::arg("nc"),
@@ -92,4 +117,10 @@ PYBIND11_MODULE(CompQuadForm, m) {
         py::arg("limit") = 10000,
         py::arg("accuracy") = 0.00001
         );
+
+    #ifdef VERSION_INFO
+        m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
+    #else
+        m.attr("__version__") = "dev";
+    #endif
 }

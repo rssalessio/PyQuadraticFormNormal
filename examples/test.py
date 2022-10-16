@@ -1,5 +1,5 @@
 from multiprocessing.sharedctypes import Value
-from CompQuadForm import davies_method
+from QuadraticFormDistributions import davies_method
 
 #print(davies_method([0], [0], [0], [0]))
 #print(davies_method([1], [1], [1], [1]))

@@ -8,15 +8,15 @@ from setuptools import setup
 __version__ = "0.0.1"
 
 ext_modules = [
-    Pybind11Extension("CompQuadForm",
-        ["generalized_chi_squared.cpp"],
+    Pybind11Extension("QuadraticFormDistributions",
+        ["QuadraticFormDistributions/generalized_chi_squared.cpp"],
         # Example: passing in the version to the compiled code
         define_macros = [('VERSION_INFO', __version__)],
         ),
 ]
 
 setup(
-    name="CompQuadForm",
+    name="QuadraticFormDistributions",
     version=__version__,
     author="Alessio Russo",
     author_email="alessior@kth.se",
