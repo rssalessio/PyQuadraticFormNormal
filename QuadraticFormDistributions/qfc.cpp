@@ -1,6 +1,4 @@
-#define UseDouble 0             /* all floating point double */
 #include <setjmp.h>
-#include <cmath>
 
 using std::atan;
 using std::exp;
@@ -280,8 +278,7 @@ output:
    trace[3]         integration interval in final integration
    trace[4]         truncation point in initial integration
    trace[5]         s.d. of initial convergence factor
-   trace[6]         cycles to locate integration parameters
-   */
+   trace[6]         cycles to locate integration parameters     */
 
 {
       int j, nj, nt, ntm;  double acc1, almx, xlim, xnt, xntm;
@@ -293,29 +290,22 @@ output:
       double qfval = -1.0;
       static int rats[]={1, 2, 4, 8};
 
-      if (setjmp(env) != 0) {
-         *ifault = 4;
-         goto endofproc; 
-      }
+      if (setjmp(env) != 0) { *ifault = 4; goto endofproc; }
       r = r1[0]; lim = lim1[0]; c = c1[0];
       n = n1; lb = lb1; nc = nc1;
-      for (j = 0; j < 7; j++)
-         trace[j] = 0.0;
+      for ( j = 0; j < 7; j++ )  trace[j] = 0.0;
       *ifault = 0; count = 0;
       intl = 0.0; ersm = 0.0;
       qfval = -1.0; acc1 = acc[0]; ndtsrt = TRUE;  fail = FALSE;
       xlim = (double)lim;
-      th = (int*) malloc(r * (sizeof(int)));
-      if (!th) {
-         *ifault = 5;
-         goto  endofproc;
-      } 
+      th = (int*)malloc(r*(sizeof(int)));
+      if (! th) { *ifault = 5;  goto  endofproc; } 
 
       /* find mean, sd, max and min of lb,
          check that parameter values are valid */
       sigsq = square(sigma[0]); sd = sigsq;
       lmax = 0.0; lmin = 0.0; mean = 0.0;
-      for (j = 0; j < r; j++)
+      for (j = 0; j < r; j++ )
       {
          nj = n[j];  lj = lb[j];  ncj = nc[j];
          if ( nj < 0  ||  ncj < 0.0 ) { *ifault = 3;  goto  endofproc;  }
@@ -323,13 +313,10 @@ output:
          mean = mean + lj * (nj + ncj);
          if (lmax < lj) lmax = lj ; else if (lmin > lj) lmin = lj;
       }
-      if (sd == 0.0 ) {
-         qfval = (c > 0.0) ? 1.0 : 0.0; goto  endofproc; 
-      }
-      if (lmin == 0.0 && lmax == 0.0 && sigma[0] == 0.0){
-         *ifault = 3;
-         goto  endofproc;
-      }
+      if ( sd == 0.0  )
+      {  qfval = (c > 0.0) ? 1.0 : 0.0; goto  endofproc;  }
+      if ( lmin == 0.0 && lmax == 0.0 && sigma[0] == 0.0 )
+         { *ifault = 3;  goto  endofproc;  }
       sd = std::sqrt(sd);
       almx = (lmax < - lmin) ? - lmin : lmax;
 
@@ -341,8 +328,7 @@ output:
       if (c != 0.0  && (almx > 0.07 * sd))
       {
          tausq = .25 * acc1 / cfe(c);
-         if (fail)
-            fail = FALSE ;
+         if (fail) fail = FALSE ;
          else if (truncation(utx, tausq) < .2 * acc1)
          {
             sigsq = sigsq + tausq;
@@ -350,21 +336,14 @@ output:
             trace[5] = std::sqrt(tausq);
          }
       }
-      trace[4] = utx;
-      acc1 = 0.5 * acc1;
+      trace[4] = utx;  acc1 = 0.5 * acc1;
 
       /* find RANGE of distribution, quit if outside this */
    l1:
       d1 = ctff(acc1, &up) - c;
-      if (d1 < 0.0) {
-         qfval = 1.0;
-         goto endofproc;
-      }
+      if (d1 < 0.0) { qfval = 1.0; goto endofproc; }
       d2 = c - ctff(acc1, &un);
-      if (d2 < 0.0) {
-         qfval = 0.0;
-         goto endofproc;
-      }
+      if (d2 < 0.0) { qfval = 0.0; goto endofproc; }
       /* find integration interval */
       intv = 2.0 * pi / ((d1 > d2) ? d1 : d2);
       /* calculate number of terms required for main and
@@ -373,8 +352,7 @@ output:
       if (xnt > xntm * 1.5)
       {
          /* parameters for auxillary integration */
-         if (xntm > xlim) {
-            *ifault = 1; goto endofproc; }
+         if (xntm > xlim) { *ifault = 1; goto endofproc; }
          ntm = (int)std::floor(xntm + 0.5);
          intv1 = utx / ntm;  x = 2.0 * pi / intv1;
          if (x <= fabs(c)) goto l2;
@@ -394,10 +372,7 @@ output:
       /* main integration */
    l2:
       trace[3] = intv;
-      if (xnt > xlim) {
-         *ifault = 1;
-         goto endofproc;
-      }
+      if (xnt > xlim) { *ifault = 1; goto endofproc; }
       nt = (int)std::floor(xnt + 0.5);
       integrate(nt, intv, 0.0, TRUE );
       trace[2] = trace[2] + 1; trace[1] = trace[1] + nt + 1;
@@ -407,10 +382,7 @@ output:
       /* test whether round-off error could be significant
          allow for radix 8 or 16 machines */
       up = ersm; x = up + acc[0] / 10.0;
-      for (j = 0; j < 4; j++) {
-         if (rats[j] * x == rats[j] * up)
-         *ifault = 2;
-      }
+      for (j = 0; j < 4; j++) { if (rats[j] * x == rats[j] * up) *ifault = 2; }
 
    endofproc :
       free((char*)th);

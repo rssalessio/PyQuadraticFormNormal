@@ -1,16 +1,15 @@
 """pybind11 QuadraticFormDistributions plugin"""
 from __future__ import annotations
-import QuadraticFormDistributions
-import typing
-import numpy
-_Shape = typing.Tuple[int, ...]
+from typing import List, Tuple
+import numpy as np
+_Shape = Tuple[int, ...]
 
 __all__ = [
     "davies_method"
 ]
 
 
-def davies_method(x: numpy.ndarray[numpy.float64], coeff: numpy.ndarray[numpy.float64], nc: numpy.ndarray[numpy.float64], df: numpy.ndarray[numpy.uint64], sigma: float = 1, limit: int = 10000, accuracy: float = 1e-05) -> typing.Tuple[numpy.ndarray[numpy.float64], numpy.ndarray[numpy.float64], int]:
+def davies_method(x: List[np.float64], coeff: List[np.float64], nc: List[np.float64], df: List[np.uint64], sigma: float = 1, limit: int = 10000, accuracy: float = 1e-05) -> Tuple[List[np.float64], List[np.float64], int]:
     """
     Distribution function of quadratic forms in normal variables using Davies’s method.
 

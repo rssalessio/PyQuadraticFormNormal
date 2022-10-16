@@ -59,7 +59,7 @@ std::tuple<py::array_t<double>, py::array_t<double>, int> davies_method(
     py::array_t<double> result = py::array_t<double>(x.shape()[0]);
     py::array_t<double> trace = py::array_t<double>(7);
     int ifault = 0;
-    int r = coeff.shape()[0];
+    int r = coeff.shape()[0] + 1;
 
     qfc(
         static_cast<double *>(coeff.request().ptr),
