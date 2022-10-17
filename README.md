@@ -1,5 +1,7 @@
 # PyQuadraticFormNormal
 
+[![Tests Status](./reports/junit/tests-badge.svg?dummy=8484744)](./reports/junit/report.html)
+
 Python library that implements the computation of quadratic form of normal random variables, i.e., it allows the computation of the distribution of a linear combination of non-centered χ2 random variables.
 
 _Library Author_: Alessio Russo (PhD Student at KTH - alessior@kth.se)\
