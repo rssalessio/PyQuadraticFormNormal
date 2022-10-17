@@ -73,6 +73,7 @@ class TestDaviesMethod(unittest.TestCase):
         self.assertRaises(ValueError, lambda:  davies_method([1], [0,1], [0,1], [0,1,1]))
         self.assertRaises(IndexError, lambda:  davies_method([0], [0], [0], [0], limit=0))
         self.assertRaises(IndexError, lambda:  davies_method([0], [0], [0], [0], limit=-1))
+        self.assertRaises(ValueError, lambda:  davies_method([0], [0], [0], [-1]))
 
 if __name__ == '__main__':
     unittest.main()

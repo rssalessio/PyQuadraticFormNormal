@@ -355,7 +355,7 @@ output:
          *ifault = 3;
          goto  endofproc;
       }
-      sd = sqrt(sd);
+      sd = std::sqrt(sd);
       almx = (parameters.lmax < - parameters.lmin) ? - parameters.lmin : parameters.lmax;
 
       /* starting values for findu, ctff */
