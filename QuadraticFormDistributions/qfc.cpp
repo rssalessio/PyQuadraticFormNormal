@@ -47,16 +47,18 @@ static double  log1(double x, bool first) {
 struct DaviesMethodParameters {
    DaviesMethodParameters(
          const double *lambda, const double *nc, const ssize_t *df,
-         const ssize_t limit, const ssize_t r, double x, double sigma) : lambda(lambda), nc(nc), df(df), limit(limit), r(r), counter(0), ndtsrt(true), fail(false) {
-      th = new int[r];
-      intl = 0.0;
-      ersm = 0.0;
-      c = x;
-      sigsq = square(sigma);
-      lmax = 0.0; lmin = 0.0; mean = 0.0;
+         const ssize_t limit, const ssize_t r, double x, double sigma): 
+         lambda(lambda), nc(nc), df(df), limit(limit), counter(0), r(r), ndtsrt(true), fail(false),
+         sigsq(square(sigma)), lmax(0.0), lmin(0.0), mean(0), c(x), intl(0), ersm(0), sigma(sigma) {
+      th = new ssize_t[r];
    }
    ~DaviesMethodParameters() {
       delete []th;
+   }
+
+   /*  count number of calls to errbd, truncation, cfe */
+   bool step_counter() {
+      return ++counter  > limit;
    }
 
    const double *lambda, *nc;
@@ -65,30 +67,53 @@ struct DaviesMethodParameters {
    const ssize_t limit, r;
    bool ndtsrt, fail;
    jmp_buf env;
-   double sigsq, lmax, lmin, mean, c, intl, ersm;
+   double sigsq, lmax, lmin, mean, c, intl, ersm, sigma;
 };
 
-/*  count number of calls to errbd, truncation, cfe */
-static void counter(DaviesMethodParameters &parameters) {
-   parameters.counter = parameters.counter + 1;
-   if ( parameters.counter > parameters.limit ) longjmp(parameters.env,1);
+
+/* find order of absolute values of lb */
+static void order(DaviesMethodParameters &parameters) {
+   int j, k; double lj;
+   for ( j = 0; j < parameters.r; j++ ) {
+      lj = std::fabs(parameters.lambda[j]);
+      for (k = j - 1; k >= 0; k--) {
+         if ( lj > std::fabs(parameters.lambda[parameters.th[k]]) )
+            parameters.th[k + 1] = parameters.th[k];
+         else
+            goto l1;
+      }
+      k = -1;
+   l1 :
+      parameters.th[k + 1] = j;
+   }
+   parameters.ndtsrt = false;
 }
+
 
 /*  find bound on tail probability using mgf, cutoff
       point returned to *cx */
 static double errbd(double u, double* cx, DaviesMethodParameters &parameters) {
-   double sum1, lj, ncj, x, y, xconst;
-   int nj;
-   counter(parameters);
-   xconst = u * parameters.sigsq;  sum1 = u * xconst;  u = 2.0 * u;
+   double sum1, xconst;
+   
+   if (parameters.step_counter())
+      longjmp(parameters.env, 1);
+
+   xconst = u * parameters.sigsq; 
+   sum1 = u * xconst;
+   u = 2.0 * u;
+   
    for (int j=parameters.r-1; j>=0; j--) {
-      nj = parameters.df[j]; lj = parameters.lb[j]; ncj = parameters.nc[j];
-      x = u * lj; y = 1.0 - x;
+      ssize_t nj = parameters.df[j];
+      double lj = parameters.lambda[j];
+      double ncj = parameters.nc[j];
+      double x = u * lj;
+      double y = 1.0 - x;
       xconst = xconst + lj * (ncj / y + nj) / y;
       sum1 = sum1 + ncj * square(x / y)
          + nj * (square(x) / y + log1(-x, false ));
    }
-   *cx = xconst; return exp1(-0.5 * sum1);
+   *cx = xconst;
+   return exp1(-0.5 * sum1);
 }
 
 /*  find ctff so that p(qf > ctff) < accx  if (upn > 0,
@@ -99,7 +124,9 @@ static double  ctff(double accx, double* upn, DaviesMethodParameters &parameters
    rb = 2.0 * ((u2 > 0.0) ? parameters.lmax : parameters.lmin);
    for (u = u2 / (1.0 + u2 * rb); errbd(u, &c2, parameters) > accx; 
       u = u2 / (1.0 + u2 * rb)) {
-      u1 = u2;  c1 = c2;  u2 = 2.0 * u2;
+      u1 = u2;
+      c1 = c2;
+      u2 = 2.0 * u2;
    }
    for (u = (c1 - parameters.mean) / (c2 - parameters.mean); u < 0.9;
       u = (c1 - parameters.mean) / (c2 - parameters.mean)) {
@@ -122,12 +149,13 @@ static double truncation(double u, double tausq, DaviesMethodParameters &paramet
    double sum1, sum2, prod1, prod2, prod3, lj, ncj,
       x, y, err1, err2;
    int j, nj, s;
-   counter(parameters);
+   if (parameters.step_counter())
+      longjmp(parameters.env, 1);
    sum1  = 0.0; prod2 = 0.0;  prod3 = 0.0;  s = 0;
    sum2 = (parameters.sigsq + tausq) * square(u); prod1 = 2.0 * sum2;
    u = 2.0 * u;
    for (j=0; j<parameters.r; j++ ) {
-      lj = parameters.lb[j];  ncj = parameters.nc[j]; nj = parameters.n[j];
+      lj = parameters.lambda[j];  ncj = parameters.nc[j]; nj = parameters.df[j];
       x = square(u * lj);
       sum1 = sum1 + ncj * x / (1.0 + x);
       if (x > 1.0) {
@@ -161,11 +189,14 @@ static void findu(double* utx, double accx, DaviesMethodParameters &parameters) 
    }
    else {
       ut = u;
-      for ( u = u / 4.0; truncation(u, 0.0, parameters) <=  accx; u = u / 4.0 )
-      ut = u;
+      for( u = u / 4.0; truncation(u, 0.0, parameters) <=  accx; u = u / 4.0 )
+         ut = u;
    }
-   for ( i=0;i<4;i++)
-      { u = ut/divis[i]; if ( truncation(u, 0.0, parameters)  <=  accx )  ut = u; }
+   for ( i=0;i<4;i++) {
+      u = ut/divis[i];
+      if ( truncation(u, 0.0, parameters)  <=  accx )
+         ut = u;
+   }
    *utx = ut;
 }
 
@@ -179,21 +210,27 @@ static void integrate(int nterm, double interv, double tausq, bool mainx, Davies
    inpi = interv / PI;
    for ( k = nterm; k>=0; k--) {
       u = (k + 0.5) * interv;
-      sum1 = - 2.0 * u * parameters.c;  sum2 = std::fabs(sum1);
+      sum1 = - 2.0 * u * parameters.c;
+      sum2 = std::fabs(sum1);
       sum3 = - 0.5 * parameters.sigsq * square(u);
       for ( j = parameters.r-1; j>=0; j--) {
-         nj = parameters.n[j];  x = 2.0 * parameters.lb[j] * u;  y = square(x);
+         nj = parameters.df[j];
+         x = 2.0 * parameters.lambda[j] * u;
+         y = square(x);
          sum3 = sum3 - 0.25 * nj * log1(y, true );
          y = parameters.nc[j] * x / (1.0 + y);
          z = nj * std::atan(x) + y;
-         sum1 = sum1 + z;   sum2 = sum2 + std::fabs(z);
+         sum1 = sum1 + z;
+         sum2 = sum2 + std::fabs(z);
          sum3 = sum3 - 0.5 * x * y;
       }
       x = inpi * exp1(sum3) / u;
-   if (!mainx)
-      x = x * (1.0 - exp1(-0.5 * tausq * square(u)));
-      sum1 = std::sin(0.5 * sum1) * x;  sum2 = 0.5 * sum2 * x;
-      parameters.intl = parameters.intl + sum1; parameters.ersm = parameters.ersm + sum2;
+      if (!mainx)
+         x = x * (1.0 - exp1(-0.5 * tausq * square(u)));
+      sum1 = std::sin(0.5 * sum1) * x;
+      sum2 = 0.5 * sum2 * x;
+      parameters.intl = parameters.intl + sum1;
+      parameters.ersm = parameters.ersm + sum2;
    }
 }
 
@@ -203,14 +240,16 @@ static void integrate(int nterm, double interv, double tausq, bool mainx, Davies
 static double cfe(double x, DaviesMethodParameters &parameters) {
    double axl, axl1, axl2, sxl, sum1, lj;
    int j, k, t;
-   counter(parameters);
-   if (parameters.ndtsrt) order();
+   if (parameters.step_counter())
+      longjmp(parameters.env, 1);
+   if (parameters.ndtsrt)
+      order(parameters);
    axl = std::fabs(x);  sxl = (x>0.0) ? 1.0 : -1.0;  sum1 = 0.0;
    for ( j = parameters.r-1; j>=0; j-- ){
       t = parameters.th[j];
-      if ( parameters.lb[t] * sxl > 0.0 ) {
-         lj = std::fabs(parameters.lb[t]);
-         axl1 = axl - lj * (parameters.n[t] + parameters.nc[t]);
+      if ( parameters.lambda[t] * sxl > 0.0 ) {
+         lj = std::fabs(parameters.lambda[t]);
+         axl1 = axl - lj * (parameters.df[t] + parameters.nc[t]);
          axl2 = lj / log28;
          if ( axl1 > axl2 )
             axl = axl1;
@@ -218,20 +257,22 @@ static double cfe(double x, DaviesMethodParameters &parameters) {
             if ( axl > axl2 )  axl = axl2;
             sum1 = (axl - axl1) / lj;
             for ( k = j-1; k>=0; k--)
-            sum1 = sum1 + (parameters.n[parameters.th[k]] + parameters.nc[parameters.th[k]]);
+            sum1 = sum1 + (parameters.df[parameters.th[k]] + parameters.nc[parameters.th[k]]);
             goto  l;
          }
       }
    }
 l:
-   if (sum1 > 100.0)
-   { parameters.fail = true; return 1.0; } else
+   if (sum1 > 100.0) {
+      parameters.fail = true;
+      return 1.0;
+   }
    return std::pow(2.0,(sum1 / 4.0)) / (PI * square(axl));
 }
 
 
-double qf(double* lb1, double* nc1, int* n1, int r1, double sigma, double c1,
-   int lim1, double acc, double* trace, int* ifault)
+double qf(double* lb1, double* nc1, ssize_t* n1, ssize_t r1, double sigma, double c1,
+   ssize_t lim1, double acc, double* trace, int* ifault)
 
 /*  distribution function of a linear combination of non-central
    chi-squared random variables :
@@ -289,9 +330,9 @@ output:
          check that parameter values are valid */
       sd = parameters.sigsq;
 
-      for (j=0; j<r; j++ ) {
+      for (j=0; j<parameters.r; j++ ) {
          nj = parameters.df[j]; 
-         lj = parameters.lb[j]; 
+         lj = parameters.lambda[j]; 
          ncj = parameters.nc[j];
          if ( nj < 0  ||  ncj < 0.0 ) {
             *ifault = 3;
@@ -343,7 +384,7 @@ output:
          qfval = 1.0;
          goto endofproc;
       }
-      d2 = c - ctff(acc1, &un, parameters);
+      d2 = parameters.c - ctff(acc1, &un, parameters);
       if (d2 < 0.0) {
          qfval = 0.0;
          goto endofproc;
@@ -361,7 +402,7 @@ output:
          }
          ntm = (int) std::floor(xntm+0.5);
          intv1 = utx / ntm;  x = 2.0 * PI / intv1;
-         if (x <= std::fabs(c)) goto l2;
+         if (x <= std::fabs(parameters.c)) goto l2;
          /* calculate convergence factor */
          tausq = .33 * acc1 / (1.1 * (cfe(parameters.c - x, parameters) + cfe(parameters.c + x, parameters)));
          if (parameters.fail) goto l2;
@@ -402,7 +443,7 @@ output:
       }
 
    endofproc :
-      trace[6] = (double)parameters.count;
+      trace[6] = (double)parameters.counter;
       return qfval;
 }
 

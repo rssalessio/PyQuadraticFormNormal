@@ -28,7 +28,7 @@ void check_parameters(
     py::array_t<double> x,
     py::array_t<double> coeff,
     py::array_t<double> nc,
-    py::array_t<unsigned long int> df,
+    py::array_t<ssize_t> df,
     double sigma,
     unsigned long int limit,
     double accuracy
@@ -48,9 +48,9 @@ py::array_t<double> davies_method(
     py::array_t<double> x,
     py::array_t<double> coeff,
     py::array_t<double> nc,
-    py::array_t<unsigned long int> df,
+    py::array_t<ssize_t> df,
     double sigma,
-    unsigned long int limit,
+    ssize_t limit,
     double accuracy) {
 
     check_parameters(x, coeff, nc, df, sigma, limit, accuracy);
@@ -58,13 +58,13 @@ py::array_t<double> davies_method(
     /* No pointer is passed, so NumPy will allocate the buffer */
     py::array_t<double> result = py::array_t<double>(x.shape()[0]);
     py::array_t<double> trace = py::array_t<double>(7);
-    int r = coeff.shape()[0];
+    ssize_t r = coeff.shape()[0];
 
     double *result_ptr = static_cast<double *>(result.request().ptr);
     double *x_ptr = static_cast<double *>(x.request().ptr);
     double *coeff_ptr = static_cast<double *>(coeff.request().ptr);
     double *nc_ptr = static_cast<double *>(nc.request().ptr);
-    int *df_ptr = static_cast<int *>(df.request().ptr);
+    ssize_t *df_ptr = static_cast<ssize_t *>(df.request().ptr);
     double *trace_ptr = static_cast<double *>(trace.request().ptr);
 
     for (ssize_t i=0; i < x.shape()[0]; i++) {
