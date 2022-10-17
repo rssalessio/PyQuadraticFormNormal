@@ -244,7 +244,8 @@ static double cfe(double x, DaviesMethodParameters &parameters) {
       longjmp(parameters.env, 1);
    if (parameters.ndtsrt)
       order(parameters);
-   axl = std::fabs(x);  sxl = (x>0.0) ? 1.0 : -1.0;  sum1 = 0.0;
+   axl = std::fabs(x);
+   sxl = (x>0.0) ? 1.0 : -1.0;  sum1 = 0.0;
    for ( j = parameters.r-1; j>=0; j-- ){
       t = parameters.th[j];
       if ( parameters.lambda[t] * sxl > 0.0 ) {
@@ -435,7 +436,7 @@ output:
 
       /* test whether round-off error could be significant
          allow for radix 8 or 16 machines */
-      up=parameters.ersm;
+      up = parameters.ersm;
       x = up + acc / 10.0;
       for (j=0;j<4;j++) {
          if (rats[j] * x == rats[j] * up)

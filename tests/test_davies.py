@@ -3,7 +3,8 @@ from PyQuadraticFormNormal import davies_method
 
 
 class TestDaviesMethod(unittest.TestCase):
-    def test_basic(self):
+    def test_returns(self):
+        """ Test that the function returns the correct number of results """
         result = davies_method([2], [1], [0], [1], sigma=0)
         self.assertEqual(len(result), 1, "Should return only one result")
         result = davies_method([2, 1], [1], [0], [1], sigma=0)
@@ -54,12 +55,24 @@ class TestDaviesMethod(unittest.TestCase):
             self.assertEqual(x, result[0], 'Values are not the same')
 
     def test_huge_values(self):
+        """ Test method with lot of parameters """
         N = 10000
         result = davies_method([9600], [1] * N, [0] * N, [1] * N, sigma=0)[0]
         self.assertEqual(result, 0.0021031643039009507, 'Value is not the same')
 
         result = davies_method([10600], [1] * N, [0] * N, [1] * N, sigma=0)[0]
         self.assertEqual(result, 0.9999844082691355, 'Value is not the same')
+
+    def test_invalid_arguments(self):
+        """ Test invalid arguments """
+        self.assertRaises(ValueError, lambda:  davies_method([], [0], [0], [0]))
+        self.assertRaises(ValueError, lambda:  davies_method([0], [0], [0], []))
+        self.assertRaises(ValueError, lambda:  davies_method([0], [0,1], [0], [0]))
+        self.assertRaises(ValueError, lambda:  davies_method([0], [0], [0], [0], accuracy=0))
+        self.assertRaises(ValueError, lambda:  davies_method([0], [0], [0], [0], accuracy=-1))
+        self.assertRaises(ValueError, lambda:  davies_method([1], [0,1], [0,1], [0,1,1]))
+        self.assertRaises(IndexError, lambda:  davies_method([0], [0], [0], [0], limit=0))
+        self.assertRaises(IndexError, lambda:  davies_method([0], [0], [0], [0], limit=-1))
 
 if __name__ == '__main__':
     unittest.main()
