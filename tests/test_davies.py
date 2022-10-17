@@ -1,5 +1,5 @@
 import unittest
-from QuadraticFormDistributions import davies_method
+from PyQuadraticFormNormal import davies_method
 
 
 class TestDaviesMethod(unittest.TestCase):

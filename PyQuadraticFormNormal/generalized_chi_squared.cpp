@@ -85,11 +85,11 @@ py::array_t<double> davies_method(
     return result;
 }
 
-PYBIND11_MODULE(QuadraticFormDistributions, m) {
+PYBIND11_MODULE(PyQuadraticFormNormal, m) {
     m.doc() = R"pbdoc(
-        QuadraticFormDistributions
+        PyQuadraticFormNormal
         -----------------------
-        .. currentmodule:: QuadraticFormDistributions
+        .. currentmodule:: PyQuadraticFormNormal
         .. autosummary::
            :toctree: _generate
            davies_method

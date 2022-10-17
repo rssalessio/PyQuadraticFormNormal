@@ -1,5 +1,5 @@
 from multiprocessing.sharedctypes import Value
-from QuadraticFormDistributions import davies_method
+from PyQuadraticFormNormal import davies_method
 from momentchi2 import hbe
 
 print(hbe([1, 1], [1]))
