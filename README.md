@@ -1,6 +1,6 @@
 # PyQuadraticFormNormal
 
-[![Tests Status](./reports/junit/tests-badge.svg?dummy=8484744)](./reports/junit/report.html)
+[![Tests Status](./reports/junit/tests-badge.svg?dummy=8484744)](./reports/junit/report.html) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Python library that implements the computation of quadratic form of normal random variables, i.e., it allows the computation of the distribution of a linear combination of non-centered χ2 random variables.
 
@@ -31,4 +31,3 @@ See also the example file in `examples/example.py`
 
 The code is released under the MIT license
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
