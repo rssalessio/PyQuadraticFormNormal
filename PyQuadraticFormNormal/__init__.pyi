@@ -1,4 +1,4 @@
-"""pybind11 QuadraticFormDistributions plugin"""
+"""pybind11 PyQuadraticFormNormal plugin"""
 from __future__ import annotations
 from typing import List, Tuple
 import numpy as np
